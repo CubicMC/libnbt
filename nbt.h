@@ -1,6 +1,7 @@
 /*
   libnbt
   Written in 2019 by IDidMakeThat
+  Forked by CubicServer
 
   To the extent possible under law, the author(s) have dedicated all copyright
   and related and neighboring rights to this software to the public domain
@@ -234,7 +235,7 @@ static nbt_tag_t *nbt__parse(nbt__read_stream_t *stream, int parse_name, nbt_tag
     nbt_tag_t *tag = (nbt_tag_t *) NBT_MALLOC(sizeof(nbt_tag_t));
 
     if (override_type == NBT_NO_OVERRIDE) {
-        tag->type = nbt__get_byte(stream);
+        tag->type = (nbt_tag_type_t) nbt__get_byte(stream);
     } else {
         tag->type = override_type;
     }
@@ -298,7 +299,7 @@ static nbt_tag_t *nbt__parse(nbt__read_stream_t *stream, int parse_name, nbt_tag
         break;
     }
     case NBT_TYPE_LIST: {
-        tag->tag_list.type = nbt__get_byte(stream);
+        tag->tag_list.type = (nbt_tag_type_t) nbt__get_byte(stream);
         tag->tag_list.size = nbt__get_int32(stream);
         tag->tag_list.value = (nbt_tag_t **) NBT_MALLOC(tag->tag_list.size * sizeof(nbt_tag_t *));
         for (size_t i = 0; i < tag->tag_list.size; i++) {
@@ -930,7 +931,7 @@ void nbt_set_tag_name(nbt_tag_t *tag, const char *name, size_t size)
 
 void nbt_tag_list_append(nbt_tag_t *list, nbt_tag_t *value)
 {
-    list->tag_list.value = NBT_REALLOC(list->tag_list.value, (list->tag_list.size + 1) * sizeof(nbt_tag_t *));
+    list->tag_list.value = (nbt_tag_t **) NBT_REALLOC(list->tag_list.value, (list->tag_list.size + 1) * sizeof(nbt_tag_t *));
     list->tag_list.value[list->tag_list.size] = value;
     list->tag_list.size++;
 }
@@ -939,7 +940,7 @@ nbt_tag_t *nbt_tag_list_get(nbt_tag_t *tag, size_t index) { return tag->tag_list
 
 void nbt_tag_compound_append(nbt_tag_t *compound, nbt_tag_t *value)
 {
-    compound->tag_compound.value = NBT_REALLOC(compound->tag_compound.value, (compound->tag_compound.size + 1) * sizeof(nbt_tag_t *));
+    compound->tag_compound.value = (nbt_tag_t **) NBT_REALLOC(compound->tag_compound.value, (compound->tag_compound.size + 1) * sizeof(nbt_tag_t *));
     compound->tag_compound.value[compound->tag_compound.size] = value;
     compound->tag_compound.size++;
 }

@@ -36,11 +36,7 @@ extern "C" {
 #include <stdint.h>
 #endif
 
-#ifdef NBT_OWN_ZLIB
-#include NBT_OWN_ZLIB
-#else
-#include "miniz.h"
-#endif
+#include <zlib.h>
 
 #ifndef Z_DEFAULT_WINDOW_BITS
 #define Z_DEFAULT_WINDOW_BITS 15
@@ -667,8 +663,8 @@ static uint32_t nbt__update_crc(uint32_t crc, uint8_t *buf, size_t len)
 void nbt_write(nbt_writer_t writer, nbt_tag_t *tag, int write_flags)
 {
 
-    int compressed;
-    int gzip_format;
+    int compressed = 0;
+    int gzip_format = 0;
 
     switch (write_flags & 3) {
     case 1: { // gzip

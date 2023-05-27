@@ -948,8 +948,12 @@ void nbt_tag_compound_append(nbt_tag_t *compound, nbt_tag_t *value)
 
 nbt_tag_t *nbt_tag_compound_get(nbt_tag_t *tag, const char *key)
 {
+    const size_t len_key = strlen(key);
+
     for (size_t i = 0; i < tag->tag_compound.size; i++) {
         nbt_tag_t *compare_tag = tag->tag_compound.value[i];
+        if (compare_tag->name_size != len_key)
+            continue;
 
         if (NBT_MEMCMP(compare_tag->name, key, compare_tag->name_size) == 0) {
             return compare_tag;

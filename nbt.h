@@ -68,6 +68,50 @@ typedef enum {
 
 typedef struct nbt_tag_t nbt_tag_t;
 
+struct TAG_byte {
+    int8_t value;
+};
+struct TAG_short {
+    int16_t value;
+};
+struct TAG_int {
+    int32_t value;
+};
+struct TAG_long {
+    int64_t value;
+};
+struct TAG_float {
+    float value;
+};
+struct TAG_double {
+    double value;
+};
+struct TAG_byte_array {
+    int8_t *value;
+    size_t size;
+};
+struct TAG_string {
+    char *value;
+    size_t size;
+};
+struct TAG_list {
+    nbt_tag_t **value;
+    nbt_tag_type_t type;
+    size_t size;
+};
+struct TAG_compound {
+    nbt_tag_t **value;
+    size_t size;
+};
+struct TAG_int_array {
+    int32_t *value;
+    size_t size;
+};
+struct TAG_long_array {
+    int64_t *value;
+    size_t size;
+};
+
 struct nbt_tag_t {
 
     nbt_tag_type_t type;
@@ -76,49 +120,18 @@ struct nbt_tag_t {
     size_t name_size;
 
     union {
-        struct {
-            int8_t value;
-        } tag_byte;
-        struct {
-            int16_t value;
-        } tag_short;
-        struct {
-            int32_t value;
-        } tag_int;
-        struct {
-            int64_t value;
-        } tag_long;
-        struct {
-            float value;
-        } tag_float;
-        struct {
-            double value;
-        } tag_double;
-        struct {
-            int8_t *value;
-            size_t size;
-        } tag_byte_array;
-        struct {
-            char *value;
-            size_t size;
-        } tag_string;
-        struct {
-            nbt_tag_t **value;
-            nbt_tag_type_t type;
-            size_t size;
-        } tag_list;
-        struct {
-            nbt_tag_t **value;
-            size_t size;
-        } tag_compound;
-        struct {
-            int32_t *value;
-            size_t size;
-        } tag_int_array;
-        struct {
-            int64_t *value;
-            size_t size;
-        } tag_long_array;
+        struct TAG_byte tag_byte;
+        struct TAG_short tag_short;
+        struct TAG_int tag_int;
+        struct TAG_long tag_long;
+        struct TAG_float tag_float;
+        struct TAG_double tag_double;
+        struct TAG_byte_array tag_byte_array;
+        struct TAG_string tag_string;
+        struct TAG_list tag_list;
+        struct TAG_compound tag_compound;
+        struct TAG_int_array tag_int_array;
+        struct TAG_long_array tag_long_array;
     };
 };
 

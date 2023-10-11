@@ -193,7 +193,7 @@ bool nbt_compare_tags(nbt_tag_t *tag1, nbt_tag_t *tag2);
 #endif
 
 #endif
-#define NBT_IMPLEMENTATION
+
 #ifdef NBT_IMPLEMENTATION
 
 typedef struct {

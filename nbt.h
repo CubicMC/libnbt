@@ -24,6 +24,9 @@ extern "C" {
 #include <stddef.h>
 
 #ifndef NBT_NO_STDLIB
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #define NBT_MALLOC malloc
@@ -182,6 +185,8 @@ nbt_tag_t *nbt_tag_compound_get(nbt_tag_t *tag, const char *key);
 nbt_tag_t *nbt_tag_compound_getidx(nbt_tag_t *tag, size_t index);
 
 void nbt_free_tag(nbt_tag_t *tag);
+nbt_tag_t *nbt_copy_tag(nbt_tag_t *tag);
+bool nbt_compare_tags(nbt_tag_t *tag1, nbt_tag_t *tag2);
 
 #ifdef __cplusplus
 }
@@ -980,6 +985,9 @@ nbt_tag_t *nbt_tag_compound_getidx(nbt_tag_t *tag, size_t index) { return tag->t
 
 void nbt_free_tag(nbt_tag_t *tag)
 {
+    if (tag == NULL) {
+        return;
+    }
     switch (tag->type) {
     case NBT_TYPE_BYTE_ARRAY: {
         NBT_FREE(tag->tag_byte_array.value);
@@ -1021,6 +1029,159 @@ void nbt_free_tag(nbt_tag_t *tag)
     }
 
     NBT_FREE(tag);
+}
+
+nbt_tag_t *nbt_copy_tag(nbt_tag_t *tag)
+{
+    if (!tag) {
+        return NULL;
+    }
+    nbt_tag_t *new_tag = nbt__new_tag_base();
+    new_tag->type = tag->type;
+    new_tag->name_size = tag->name_size;
+    new_tag->name = (char *) NBT_MALLOC(tag->name_size + 1);
+    NBT_MEMCPY(new_tag->name, tag->name, tag->name_size);
+    new_tag->name[new_tag->name_size] = '\0';
+
+    switch (tag->type) {
+    case NBT_TYPE_BYTE:
+        new_tag->tag_byte.value = tag->tag_byte.value;
+        break;
+    case NBT_TYPE_SHORT:
+        new_tag->tag_short.value = tag->tag_short.value;
+        break;
+    case NBT_TYPE_INT:
+        new_tag->tag_int.value = tag->tag_int.value;
+        break;
+    case NBT_TYPE_LONG:
+        new_tag->tag_long.value = tag->tag_long.value;
+        break;
+    case NBT_TYPE_FLOAT:
+        new_tag->tag_float.value = tag->tag_float.value;
+        break;
+    case NBT_TYPE_DOUBLE:
+        new_tag->tag_double.value = tag->tag_double.value;
+        break;
+    case NBT_TYPE_BYTE_ARRAY:
+        new_tag->tag_byte_array.size = tag->tag_byte_array.size;
+        new_tag->tag_byte_array.value = (int8_t *) NBT_MALLOC(tag->tag_byte_array.size);
+        NBT_MEMCPY(new_tag->tag_byte_array.value, tag->tag_byte_array.value, tag->tag_byte_array.size);
+        break;
+    case NBT_TYPE_STRING:
+        new_tag->tag_string.size = tag->tag_string.size;
+        new_tag->tag_string.value = (char *) NBT_MALLOC(tag->tag_string.size + 1);
+        NBT_MEMCPY(new_tag->tag_string.value, tag->tag_string.value, tag->tag_string.size);
+        new_tag->tag_string.value[new_tag->tag_string.size] = '\0';
+        break;
+    case NBT_TYPE_LIST:
+        new_tag->tag_list.type = tag->tag_list.type;
+        new_tag->tag_list.size = tag->tag_list.size;
+        new_tag->tag_list.value = (nbt_tag_t **) NBT_MALLOC(tag->tag_list.size * sizeof(nbt_tag_t *));
+        for (size_t i = 0; i < tag->tag_list.size; i++) {
+            new_tag->tag_list.value[i] = nbt_copy_tag(tag->tag_list.value[i]);
+        }
+        break;
+    case NBT_TYPE_COMPOUND:
+        new_tag->tag_compound.size = tag->tag_compound.size;
+        new_tag->tag_compound.value = (nbt_tag_t **) NBT_MALLOC(tag->tag_compound.size * sizeof(nbt_tag_t *));
+        for (size_t i = 0; i < tag->tag_compound.size; i++) {
+            new_tag->tag_compound.value[i] = nbt_copy_tag(tag->tag_compound.value[i]);
+        }
+        break;
+    case NBT_TYPE_INT_ARRAY:
+        new_tag->tag_int_array.size = tag->tag_int_array.size;
+        new_tag->tag_int_array.value = (int32_t *) NBT_MALLOC(tag->tag_int_array.size * sizeof(int32_t));
+        NBT_MEMCPY(new_tag->tag_int_array.value, tag->tag_int_array.value, tag->tag_int_array.size * sizeof(int32_t));
+        break;
+    case NBT_TYPE_LONG_ARRAY:
+        new_tag->tag_long_array.size = tag->tag_long_array.size;
+        new_tag->tag_long_array.value = (int64_t *) NBT_MALLOC(tag->tag_long_array.size * sizeof(int64_t));
+        NBT_MEMCPY(new_tag->tag_long_array.value, tag->tag_long_array.value, tag->tag_long_array.size * sizeof(int64_t));
+        break;
+    default:
+        NBT_FREE(new_tag->name);
+        NBT_FREE(new_tag);
+        return NULL;
+    }
+    return new_tag;
+}
+
+bool nbt_compare_tags(nbt_tag_t *tag1, nbt_tag_t *tag2)
+{
+    if (tag1 == NULL && tag2 == NULL) {
+        return true;
+    }
+    if (tag1 == NULL || tag2 == NULL) {
+        return false;
+    }
+    if (tag1->type != tag2->type) {
+        return false;
+    }
+    if (tag1->name_size != tag2->name_size) {
+        return false;
+    }
+    if (NBT_MEMCMP(tag1->name, tag2->name, tag1->name_size) != 0) {
+        return false;
+    }
+    switch (tag1->type) {
+    case NBT_TYPE_BYTE:
+        return tag1->tag_byte.value == tag2->tag_byte.value;
+    case NBT_TYPE_SHORT:
+        return tag1->tag_short.value == tag2->tag_short.value;
+    case NBT_TYPE_INT:
+        return tag1->tag_int.value == tag2->tag_int.value;
+    case NBT_TYPE_LONG:
+        return tag1->tag_long.value == tag2->tag_long.value;
+    case NBT_TYPE_FLOAT:
+        return tag1->tag_float.value == tag2->tag_float.value;
+    case NBT_TYPE_DOUBLE:
+        return tag1->tag_double.value == tag2->tag_double.value;
+    case NBT_TYPE_BYTE_ARRAY:
+        if (tag1->tag_byte_array.size != tag2->tag_byte_array.size) {
+            return false;
+        }
+        return NBT_MEMCMP(tag1->tag_byte_array.value, tag2->tag_byte_array.value, tag1->tag_byte_array.size) == 0;
+    case NBT_TYPE_STRING:
+        if (tag1->tag_string.size != tag2->tag_string.size) {
+            return false;
+        }
+        return NBT_MEMCMP(tag1->tag_string.value, tag2->tag_string.value, tag1->tag_string.size) == 0;
+    case NBT_TYPE_LIST:
+        if (tag1->tag_list.type != tag2->tag_list.type) {
+            return false;
+        }
+        if (tag1->tag_list.size != tag2->tag_list.size) {
+            return false;
+        }
+        for (size_t i = 0; i < tag1->tag_list.size; i++) {
+            if (!nbt_compare_tags(tag1->tag_list.value[i], tag2->tag_list.value[i])) {
+                return false;
+            }
+        }
+        return true;
+    case NBT_TYPE_COMPOUND:
+        if (tag1->tag_compound.size != tag2->tag_compound.size) {
+            return false;
+        }
+        for (size_t i = 0; i < tag1->tag_compound.size; i++) {
+            if (!nbt_compare_tags(tag1->tag_compound.value[i], tag2->tag_compound.value[i])) {
+                return false;
+            }
+        }
+        return true;
+    case NBT_TYPE_INT_ARRAY:
+        if (tag1->tag_int_array.size != tag2->tag_int_array.size) {
+            return false;
+        }
+        return NBT_MEMCMP(tag1->tag_int_array.value, tag2->tag_int_array.value, tag1->tag_int_array.size * sizeof(int32_t)) == 0;
+    case NBT_TYPE_LONG_ARRAY:
+        if (tag1->tag_long_array.size != tag2->tag_long_array.size) {
+            return false;
+        }
+        return NBT_MEMCMP(tag1->tag_long_array.value, tag2->tag_long_array.value, tag1->tag_long_array.size * sizeof(int64_t)) == 0;
+    default:
+        return false;
+    }
 }
 
 #endif

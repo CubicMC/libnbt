@@ -185,8 +185,8 @@ nbt_tag_t *nbt_tag_compound_get(nbt_tag_t *tag, const char *key);
 nbt_tag_t *nbt_tag_compound_getidx(nbt_tag_t *tag, size_t index);
 
 void nbt_free_tag(nbt_tag_t *tag);
-nbt_tag_t *nbt_copy_tag(nbt_tag_t *tag);
-bool nbt_compare_tags(nbt_tag_t *tag1, nbt_tag_t *tag2);
+nbt_tag_t *nbt_copy_tag(const nbt_tag_t *tag);
+bool nbt_compare_tags(const nbt_tag_t *tag1, const nbt_tag_t *tag2);
 
 #ifdef __cplusplus
 }
@@ -1031,7 +1031,7 @@ void nbt_free_tag(nbt_tag_t *tag)
     NBT_FREE(tag);
 }
 
-nbt_tag_t *nbt_copy_tag(nbt_tag_t *tag)
+nbt_tag_t *nbt_copy_tag(const nbt_tag_t *tag)
 {
     if (!tag) {
         return NULL;
@@ -1106,7 +1106,7 @@ nbt_tag_t *nbt_copy_tag(nbt_tag_t *tag)
     return new_tag;
 }
 
-bool nbt_compare_tags(nbt_tag_t *tag1, nbt_tag_t *tag2)
+bool nbt_compare_tags(const nbt_tag_t *tag1, const nbt_tag_t *tag2)
 {
     if (tag1 == NULL && tag2 == NULL) {
         return true;
